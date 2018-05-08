@@ -31,6 +31,7 @@ class LinReg:
 
 	def interpolate(self, point, confidence = 0.95):
 		print "Interpolating...\n*******************************"
+		self.point = point
 		self.S = np.sqrt(np.sum(np.square(self.y_data - self.m * self.x_data - self.b))/float(self.n - 2))
 		self.y_interp = self.m * point + self.b
 		self.x_mean = np.mean(self.x_data)
@@ -38,6 +39,7 @@ class LinReg:
 		alpha = 0.5 * (1-confidence)
 		df = self.n - 2
 		t_crit = -t.ppf(alpha, df)
+		self.t_crit = t_crit
 		margin = t_crit * self.interp_error
 		print "Interpolated value: " + str(self.y_interp) + r" +/- " + str(self.interp_error)
 		print str(confidence*100) + "% confidence interval: [" + str(self.y_interp - margin) + ", " + str(self.y_interp + margin) + "]" 
@@ -53,10 +55,10 @@ class LinReg:
 		del_m = 0.0001
 		self.mass = self.y_interp * 0.001 * V * (m_t/m_u) * MM #estimated mass of compound in pill
 		C = self.y_interp * 0.001
-		
-		#self.error = np.sqrt(np.square(V * m_t * MM /m_u) * np.square(del_C) + np.square(C * m_t * MM /m_u) * np.square(del_V) + np.square(C * V * MM /m_u) * np.square(del_m) + np.square(C * V * m_t * MM /np.square(m_u)) * np.square(del_m))
-		self.error = np.sqrt(np.square(C * m_t * MM /m_u) * np.square(del_V))
-		print "Mass in tablet: " + str(self.mass) + "g +/- " + str(self.error) + "g"
+		self.error = np.sqrt(np.square(V * m_t * MM /m_u) * np.square(del_C) + np.square(C * m_t * MM /m_u) * np.square(del_V) + np.square(C * V * MM /m_u) * np.square(del_m) + np.square(C * V * m_t * MM /np.square(m_u)) * np.square(del_m))
+		#self.error = np.sqrt(np.square(C * m_t * MM /m_u) * np.square(del_V))
+		print "Mass in tablet: " + str(self.mass) + "g +/- " + str(self.error * self.t_crit) + "g"
+		print "95% CI: [" + str(self.mass - self.error * self.t_crit) + ", " + str(self.mass + self.error * self.t_crit) + "]"
 		print "\n\n"
 
 	def plot(self, save_direc):
@@ -66,8 +68,9 @@ class LinReg:
 		y = self.m * x + self.b
 
 		plt.figure()
-		plt.plot(x,y, '-k')
-		plt.scatter(self.x_data, self.y_data, c='b')
+		plt.plot(y,x, '-k')
+		#plt.scatter(self.y_interp, self.point, c='r')
+		plt.scatter(self.y_data, self.x_data, c='b')
 		plt.savefig(save_direc, format='png')
 		
 
@@ -76,6 +79,7 @@ class LinReg:
 if __name__ == '__main__':
 	caf_conc = [0.103, 0.206, 0.309, 0.412, 0.515, 0.103, 0.206, 0.309, 0.412, 0.515, 0.103, 0.206, 0.309, 0.412, 0.515]
 	caf_response = [7463505, 9780646, 12039116, 13115760, 13846664, 8337490.194, 9569525.617, 11826159.97, 12366823.44, 13924057.24, 8024468.647, 8390230.98, 13204501.13, 17628871.67, 18239615.4]
+
 	caf_unknown = 20943374.692
 	MM_caf = 194.19
 
@@ -86,8 +90,10 @@ if __name__ == '__main__':
 
 	#aa_conc = [0.444, 0.888, 1.33, 1.78, 2.22, 0.441, 0.912, 1.45, 1.82, 2.41, 0.449, 0.897, 1.34, 1.79, 2.24]
 	aa_conc = [0.449, 0.897, 1.34, 1.79, 2.24]
+	#aa_conc = [0.441, 0.912, 1.45, 1.82, 2.41]
 	#aa_response = [2191590.065, 3793521.876, 4041092.531, 4750989.675, 5789987.465, 243785.701, 288627.124, 300219.042, 326190.326, 382816.774, 6246778, 9327923, 10201061, 11211106, 13745142]
 	aa_response = [6246778, 9327923, 10201061, 11211106, 13745142]
+	#aa_response = [243785.701, 288627.124, 300219.042, 326190.326, 382816.774]
 	aa_unknown = 8768938.805
 	MM_aa = 180.158
 
