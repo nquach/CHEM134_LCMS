@@ -29,6 +29,23 @@ class LinReg:
 		print "R2: " + str(self.r2)
 		print "\n\n"
 
+	def compute_reverse_model(self):
+		print "Computing model...\n******************************"
+		self.xy_sum = np.sum(self.x_data * self.y_data)
+		self.x_sum = np.sum(self.y_data)
+		self.y_sum = np.sum(self.x_data)
+		self.x2_sum = np.sum(np.square(self.y_data))
+		self.y2_sum = np.sum(np.square(self.x_data))
+		self.m = ((self.n * self.xy_sum) - self.x_sum * self.y_sum) / (self.n * self.x2_sum - np.square(self.x_sum))
+		print "Slope: ", self.m
+		self.b = ((self.x2_sum * self.y_sum) - self.x_sum * self.xy_sum) / (self.n * self.x2_sum - np.square(self.x_sum))
+		print "Offset: ", self.b
+
+		r = (self.n * self.xy_sum - self.x_sum * self.y_sum) / np.sqrt((self.n * self.x2_sum - np.square(self.x_sum)) * (self.n * self.y2_sum - np.square(self.y_sum)))
+		self.r2 = np.square(r)
+		print "R2: " + str(self.r2)
+		print "\n\n"
+
 	def interpolate(self, point, confidence = 0.95):
 		print "Interpolating...\n*******************************"
 		self.point = point
@@ -73,6 +90,20 @@ class LinReg:
 		plt.scatter(self.y_data, self.x_data, c='b')
 		plt.savefig(save_direc, format='png')
 		
+	def calculate_LOD(self):
+		self.resid = []
+		index = 0
+		for x in self.x_data:
+			y_hat = self.m * x + self.b
+			self.resid.append(self.y_data[index] - y_hat)
+			index = index + 1
+
+		self.MSE_resid = np.sqrt(np.sum(np.square(self.resid)))
+		self.LOD = 3.3 * self.MSE_resid / self.m 
+		self.LOQ = 10 * self.MSE_resid / self.m
+		print "Limit of Detection: ", self.LOD
+		print "Limit of Quantification: ", self.LOQ
+				
 
 
 
@@ -80,48 +111,52 @@ if __name__ == '__main__':
 	caf_conc = [0.103, 0.206, 0.309, 0.412, 0.515, 0.103, 0.206, 0.309, 0.412, 0.515, 0.103, 0.206, 0.309, 0.412, 0.515]
 	caf_response = [7463505, 9780646, 12039116, 13115760, 13846664, 8337490.194, 9569525.617, 11826159.97, 12366823.44, 13924057.24, 8024468.647, 8390230.98, 13204501.13, 17628871.67, 18239615.4]
 
-	caf_unknown = 20943374.692
+	#caf_unknown = 20943374.692
+	caf_unknown = 12612240.570
 	MM_caf = 194.19
 
 	ac_conc = [0.598, 1.20, 1.79, 2.39, 2.99, 0.529, 1.058, 1.588, 2.117, 2.646, 0.544, 1.088, 1.631, 2.175, 2.719]
 	ac_response = [18624328.59, 26089739.78, 31158970.57, 34586545.54, 39855979.52, 18924802.08, 22606713.1, 30619112.89, 34392604.8, 38778435.58, 21714957.94, 25143038.05, 31002737.32, 29445853.31, 39665565.6]
-	ac_unknown = 33365281.175
+	#ac_unknown = 33365281.175
+	ac_unknown = 30758809.759
 	MM_ac = 151.163
 
-	#aa_conc = [0.444, 0.888, 1.33, 1.78, 2.22, 0.441, 0.912, 1.45, 1.82, 2.41, 0.449, 0.897, 1.34, 1.79, 2.24]
-	aa_conc = [0.449, 0.897, 1.34, 1.79, 2.24]
-	#aa_conc = [0.441, 0.912, 1.45, 1.82, 2.41]
-	#aa_response = [2191590.065, 3793521.876, 4041092.531, 4750989.675, 5789987.465, 243785.701, 288627.124, 300219.042, 326190.326, 382816.774, 6246778, 9327923, 10201061, 11211106, 13745142]
-	aa_response = [6246778, 9327923, 10201061, 11211106, 13745142]
+	#aa_conc = [0.444, 0.888, 1.33, 1.78, 2.22, 0.445, 0.891, 1.33, 1.74, 2.21, 0.449, 0.897, 1.34, 1.79, 2.24]
+	#aa_conc = [0.449, 0.897, 1.34, 1.79, 2.24]
+	aa_conc = [0.445, .891, 1.33, 1.74, 2.21]
+	#aa_response = [2191590.065, 3793521.876, 4041092.531, 4750989.675, 5789987.465, 2437841.701, 3765435.1, 4324651.042, 4865437.354, 5478743.177, 6246778, 9327923, 10201061, 11211106, 13745142]
+	#aa_response = [6246778, 9327923, 10201061, 11211106, 13745142]
+	aa_response = [2437841.701, 3765435.1, 4324651.042, 4865437.354, 5478743.177]
 	#aa_response = [243785.701, 288627.124, 300219.042, 326190.326, 382816.774]
-	aa_unknown = 8768938.805
+	#aa_unknown = 8768938.805
+	aa_unknown = 3942433.352
 	MM_aa = 180.158
 
 	root_direc = "/Users/nicolasquach/Documents/stanford/senior_yr/spring/CHEM134/labs/lab3/plots/"
 
 	print "Analyzing Caffeine: "
 	Caffeine = LinReg(caf_response, caf_conc)
-	Caffeine.compute_model()
-	Caffeine.interpolate(caf_unknown)
-	Caffeine.calculate(MM_caf)
-	caf_path = os.path.join(root_direc, 'caffeine.png')
-	Caffeine.plot(caf_path)
+	Caffeine.compute_reverse_model()
+	#Caffeine.interpolate(caf_unknown)
+	#Caffeine.calculate(MM_caf)
+	#caf_path = os.path.join(root_direc, 'caffeine.png')
+	#Caffeine.plot(caf_path)
 
 	print "Analyzing Acetominophen: "
 	Ac = LinReg(ac_response, ac_conc)
-	Ac.compute_model()
-	Ac.interpolate(ac_unknown)
-	Ac.calculate(MM_ac)
-	ac_path = os.path.join(root_direc, 'acetominophen.png')
-	Ac.plot(ac_path)
+	Ac.compute_reverse_model()
+	#Ac.interpolate(ac_unknown)
+	#Ac.calculate(MM_ac)
+	#ac_path = os.path.join(root_direc, 'acetominophen.png')
+	#Ac.plot(ac_path)
 
 	print "Analyzing Aspirin: "
 	AA = LinReg(aa_response, aa_conc)
-	AA.compute_model()
-	AA.interpolate(aa_unknown)
-	AA.calculate(MM_aa)
-	aa_path = os.path.join(root_direc, 'aspirin.png')
-	AA.plot(aa_path)
+	AA.compute_reverse_model()
+	#AA.interpolate(aa_unknown)
+	#AA.calculate(MM_aa)
+	#aa_path = os.path.join(root_direc, 'aspirin.png')
+	#AA.plot(aa_path)
 
 
 
